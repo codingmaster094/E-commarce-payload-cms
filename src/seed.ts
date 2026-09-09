@@ -4,6 +4,8 @@ import { CATEGORIES, COLLECTIONS, PRODUCTS, WHY_CHOOSE_US } from './lib/seedData
 
 const seedContext = { disableRevalidate: true }
 
+type SeedCollection = 'categories' | 'collections' | 'products'
+
 function lexicalFromText(text: string) {
   return {
     root: {
@@ -38,7 +40,7 @@ function lexicalFromText(text: string) {
 
 async function upsertBySlug(
   payload: Payload,
-  collection: 'categories' | 'collections' | 'products',
+  collection: SeedCollection,
   slug: string,
   data: Record<string, unknown>,
 ) {
@@ -50,6 +52,8 @@ async function upsertBySlug(
     pagination: false,
   })
 
+  // Payload's create/update overloads cannot match a union of collection slugs
+  // to a shared data object, so the operation args are asserted here.
   if (existing.docs[0]) {
     return payload.update({
       collection,
@@ -58,7 +62,7 @@ async function upsertBySlug(
       depth: 0,
       overrideAccess: true,
       context: seedContext,
-    })
+    } as Parameters<Payload['update']>[0])
   }
 
   return payload.create({
@@ -67,7 +71,7 @@ async function upsertBySlug(
     depth: 0,
     overrideAccess: true,
     context: seedContext,
-  })
+  } as Parameters<Payload['create']>[0])
 }
 
 export async function seedWebsite(payload: Payload) {
