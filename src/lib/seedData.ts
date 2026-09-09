@@ -43,6 +43,9 @@ export interface ProductItem {
   featured?: boolean
   bestSeller?: boolean
   newArrival?: boolean
+  brandSlug?: string
+  brandName?: string
+  tags?: string[]
 }
 
 export interface CategoryItem {

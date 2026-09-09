@@ -47,11 +47,20 @@ export default async function RootLayout({ children }) {
   const collections = withFallbackCollections(collectionDocs);
   const brand = mergeBrand(siteSettings);
   const headerMenus = menusData?.menus || [];
+  const jsonLd = JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: brand.brandName,
+    url: process.env.NEXT_PUBLIC_SERVER_URL || process.env.BASE_DOAMAIN || "",
+    email: brand.contactEmail,
+    telephone: brand.phone,
+  });
 
   return (
     <html lang="en">
       <body className="bg-white text-neutral-900 antialiased font-outfit">
         <ShopProvider products={products} categories={categories} collections={collections} brand={brand}>
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
           <Header menuData={headerMenus} headerData={headerData} siteSettings={siteSettings} />
           <main className="min-h-screen">{children}</main>
 

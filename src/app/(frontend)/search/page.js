@@ -20,8 +20,10 @@ function SearchContent() {
         const q = query.toLowerCase()
         return (
           p.name.toLowerCase().includes(q) ||
+          p.sku.toLowerCase().includes(q) ||
           p.categoryName.toLowerCase().includes(q) ||
           p.shortDescription.toLowerCase().includes(q) ||
+          (p.tags || []).some((tag) => tag.toLowerCase().includes(q)) ||
           p.materials.some((m) => m.toLowerCase().includes(q))
         )
       })

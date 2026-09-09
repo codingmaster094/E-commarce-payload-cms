@@ -1,6 +1,6 @@
 import type { GlobalConfig } from 'payload'
 import { anyone } from '@/access/anyone'
-import { authenticated } from '@/access/authenticated'
+import { isAdmin } from '@/access/isAdmin'
 
 export const AboutPage: GlobalConfig = {
   slug: 'about-page',
@@ -10,7 +10,7 @@ export const AboutPage: GlobalConfig = {
   },
   access: {
     read: anyone,
-    update: authenticated,
+    update: isAdmin,
   },
   fields: [
     {

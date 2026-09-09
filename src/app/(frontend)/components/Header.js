@@ -42,6 +42,7 @@ export default function Header({ menuData = [], headerData = null, siteSettings 
     ? products.filter(
         (p) =>
           p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
           p.categoryName.toLowerCase().includes(searchQuery.toLowerCase()) ||
           p.materials.some((m) => m.toLowerCase().includes(searchQuery.toLowerCase()))
       ).slice(0, 5)
@@ -56,16 +57,28 @@ export default function Header({ menuData = [], headerData = null, siteSettings 
     { label: "Contact", href: "/contact" },
   ];
 
-  const dynamicLinks = menuData.length > 0 
-    ? menuData.map(item => ({
-        label: item?.link?.label || "Link",
-        href: item?.link?.url || "#"
+  const headerNav = Array.isArray(headerData?.navigation) ? headerData.navigation : []
+  const dynamicLinks = headerNav.length > 0
+    ? headerNav.map((item) => ({
+        label: item.label || 'Link',
+        href: item.link || '#',
+        children: item.children || [],
       }))
-    : fallbackNavLinks;
+    : menuData.length > 0
+    ? menuData.map((item) => ({
+        label: item?.link?.label || 'Link',
+        href: item?.link?.url || '#',
+        children: (item.submenus || []).map((sub) => ({
+          label: sub.label || sub.link?.label,
+          href: sub.url || sub.link?.url || '#',
+        })),
+      }))
+    : fallbackNavLinks
 
   return (
     <>
       {/* Top Banner */}
+      {headerData?.showAnnouncement !== false && (
       <div className="bg-neutral-900 text-neutral-300 text-xs py-2.5 px-4 text-center font-medium tracking-wide flex justify-center items-center gap-2 sm:gap-3">
         <span>{siteSettings?.announcementLeft || "Exclusive Seating Innovation"}</span>
         <span className="hidden sm:inline text-neutral-600">•</span>
@@ -77,6 +90,7 @@ export default function Header({ menuData = [], headerData = null, siteSettings 
           {siteSettings?.announcementRight || `${brand.policies.warrantyYears}-Year Frame Warranty`}
         </span>
       </div>
+      )}
 
       {/* Main Sticky Header */}
       <header
@@ -128,9 +142,10 @@ export default function Header({ menuData = [], headerData = null, siteSettings 
           <nav className="hidden lg:flex items-center gap-6 lg:gap-8 xl:gap-10">
             {dynamicLinks.map((link) => {
               const isActive = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href));
+              const children = link.children || []
               return (
+                <div key={link.href} className="relative group">
                 <Link
-                  key={link.href}
                   href={link.href}
                   className={`whitespace-nowrap text-[15px] font-semibold tracking-wide transition-colors relative py-1.5 ${
                     isActive ? "text-neutral-950 font-bold" : "text-neutral-500 hover:text-neutral-950"
@@ -141,6 +156,16 @@ export default function Header({ menuData = [], headerData = null, siteSettings 
                     <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-950 rounded-full" />
                   )}
                 </Link>
+                {children.length > 0 ? (
+                  <div className="absolute left-0 top-full hidden group-hover:block bg-white border border-neutral-200 rounded-xl shadow-xl min-w-[200px] p-2 z-50">
+                    {children.map((child) => (
+                      <Link key={child.href} href={child.href} className="block px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-50 rounded-lg">
+                        {child.label}
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
+                </div>
               );
             })}
           </nav>
@@ -148,6 +173,7 @@ export default function Header({ menuData = [], headerData = null, siteSettings 
           {/* Utility Actions */}
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Search Button */}
+            {headerData?.searchEnabled !== false && (
             <button
               onClick={() => setSearchOpen(true)}
               className="p-3 text-neutral-700 hover:text-neutral-950 transition rounded-xl hover:bg-neutral-100 min-h-[44px] min-w-[44px] flex items-center justify-center"
@@ -158,6 +184,7 @@ export default function Header({ menuData = [], headerData = null, siteSettings 
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
+            )}
 
             {/* Wishlist Icon */}
             <Link

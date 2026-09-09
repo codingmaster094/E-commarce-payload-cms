@@ -167,6 +167,53 @@ export const Header: GlobalConfig = {
       relationTo: 'media',
       required: false,
     },
+    {
+      name: 'showAnnouncement',
+      type: 'checkbox',
+      defaultValue: true,
+    },
+    { name: 'searchEnabled', type: 'checkbox', defaultValue: true },
+    { name: 'accountEnabled', type: 'checkbox', defaultValue: true },
+    { name: 'wishlistEnabled', type: 'checkbox', defaultValue: true },
+    { name: 'cartEnabled', type: 'checkbox', defaultValue: true },
+    { name: 'mobileMenuEnabled', type: 'checkbox', defaultValue: true },
+    {
+      name: 'cta',
+      type: 'group',
+      fields: [
+        { name: 'label', type: 'text' },
+        { name: 'url', type: 'text' },
+        { name: 'openInNewTab', type: 'checkbox', defaultValue: false },
+      ],
+    },
+    {
+      name: 'navigation',
+      type: 'array',
+      labels: { singular: 'Nav item', plural: 'Nav items' },
+      fields: [
+        { name: 'label', type: 'text', required: true },
+        { name: 'link', type: 'text', required: true },
+        {
+          name: 'type',
+          type: 'select',
+          defaultValue: 'link',
+          options: [
+            { label: 'Link', value: 'link' },
+            { label: 'Dropdown', value: 'dropdown' },
+          ],
+        },
+        { name: 'openInNewTab', type: 'checkbox', defaultValue: false },
+        {
+          name: 'children',
+          type: 'array',
+          fields: [
+            { name: 'label', type: 'text', required: true },
+            { name: 'link', type: 'text', required: true },
+            { name: 'openInNewTab', type: 'checkbox', defaultValue: false },
+          ],
+        },
+      ],
+    },
   ],
   hooks: {
     afterChange: [revalidateHeader],

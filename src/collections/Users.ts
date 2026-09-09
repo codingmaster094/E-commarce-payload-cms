@@ -11,8 +11,10 @@ export const Users: CollectionConfig = {
       secure: process.env.NODE_ENV === 'production' || process.env.VERCEL === '1',
     },
   },
+  access: {
+    admin: ({ req: { user } }) => user?.collection === 'users',
+  },
   fields: [
-    // Email added by default
-    // Add more fields as needed
+    { name: 'name', type: 'text' },
   ],
 }

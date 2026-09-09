@@ -29,9 +29,10 @@ export default function ChairsListingPage() {
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
         const matchesName = p.name.toLowerCase().includes(q)
+        const matchesSku = p.sku.toLowerCase().includes(q)
         const matchesCategory = p.categoryName.toLowerCase().includes(q)
         const matchesDesc = p.shortDescription.toLowerCase().includes(q)
-        if (!matchesName && !matchesCategory && !matchesDesc) return false
+        if (!matchesName && !matchesSku && !matchesCategory && !matchesDesc) return false
       }
 
       // Category

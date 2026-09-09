@@ -10,6 +10,7 @@ import { linkGroup } from '@/fields/link'
 import { blockSettings } from '@/fields/blockSettings'
 import { defaultLexical } from '@/fields/defaultLexical'
 import { groupToBlock } from '@/blocks/groupToBlock'
+import { ecommerceBlocks } from '@/blocks/ecommerce'
 import type { GroupField } from 'payload'
 
 export const HeroBlock = groupToBlock(Hero as GroupField, {
@@ -154,4 +155,5 @@ export const pageBlocks: Block[] = [
   AccordionBlock,
   SpacerBlock,
   HtmlBlock,
+  ...ecommerceBlocks,
 ]

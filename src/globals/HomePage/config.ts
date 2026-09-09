@@ -1,6 +1,6 @@
 import type { GlobalConfig } from 'payload'
 import { anyone } from '@/access/anyone'
-import { authenticated } from '@/access/authenticated'
+import { isAdmin } from '@/access/isAdmin'
 
 const ctaFields = [
   { name: 'label', type: 'text' as const },
@@ -15,7 +15,7 @@ export const HomePage: GlobalConfig = {
   },
   access: {
     read: anyone,
-    update: authenticated,
+    update: isAdmin,
   },
   fields: [
     {

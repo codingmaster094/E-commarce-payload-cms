@@ -5,8 +5,12 @@ import Link from 'next/link'
 import { useShop } from '@/context/ShopContext'
 
 export default function CheckoutPage() {
-  const { cart, cartSubtotal, clearCart, brand } = useShop()
+  const { cart, cartSubtotal, clearCart, brand, coupon, applyCouponCode, removeCoupon } = useShop()
   const [orderPlaced, setOrderPlaced] = useState(false)
+  const [orderNumber, setOrderNumber] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const [couponInput, setCouponInput] = useState('')
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -20,12 +24,57 @@ export default function CheckoutPage() {
 
   const shippingFee = cartSubtotal >= brand.policies.freeShippingThreshold ? 0 : 25
   const estimatedTax = cartSubtotal * 0.08
-  const grandTotal = cartSubtotal + shippingFee + estimatedTax
+  const discount = coupon?.discount || 0
+  const grandTotal = Math.max(0, cartSubtotal - discount + shippingFee + estimatedTax)
 
-  const handleSubmitOrder = (e) => {
+  const handleSubmitOrder = async (e) => {
     e.preventDefault()
-    setOrderPlaced(true)
-    clearCart()
+    setSubmitting(true)
+    setError('')
+    try {
+      const response = await fetch('/api/commerce/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: formData.email,
+          customerName: `${formData.firstName} ${formData.lastName}`.trim(),
+          items: cart.map((item) => ({
+            productId: item.product.id,
+            quantity: item.quantity,
+            color: item.selectedColor,
+          })),
+          shipping: shippingFee,
+          tax: estimatedTax,
+          couponCode: coupon?.code,
+          shippingMethod: 'standard',
+          paymentMethod: 'manual',
+          shippingAddress: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            phone: formData.phone,
+            street: formData.address,
+            city: formData.city,
+            postalCode: formData.postalCode,
+            country: formData.country,
+          },
+          billingSameAsShipping: true,
+        }),
+      })
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        setError(data.error || 'Unable to place order.')
+        setSubmitting(false)
+        return
+      }
+      setOrderNumber(data.orderNumber)
+      setOrderPlaced(true)
+      clearCart()
+    } catch {
+      setError('Unable to place order.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   if (orderPlaced) {
@@ -36,7 +85,7 @@ export default function CheckoutPage() {
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold font-outfit text-neutral-900">Order Placed Successfully!</h1>
         <p className="text-xs sm:text-sm text-neutral-600">
-          Thank you for choosing <strong className="text-neutral-900">{brand.brandName}</strong>. Order confirmation #MNV-{Math.floor(100000 + Math.random() * 900000)} has been sent to your email.
+          Thank you for choosing <strong className="text-neutral-900">{brand.brandName}</strong>. Order confirmation {orderNumber} has been recorded.
         </p>
         <div className="pt-4 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
           <Link
@@ -170,16 +219,42 @@ export default function CheckoutPage() {
             <h3 className="text-base sm:text-lg font-bold font-outfit text-neutral-900">3. Payment Provider</h3>
             <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 space-y-1">
               <span className="font-bold">E-Commerce Ready Mode:</span>
-              <p>Payment provider integration architecture ready (Stripe / PayPal). Submitting this order will record the order in Payload CMS.</p>
+              <p>Payment is modular. This order is stored in Payload with payment status pending until a provider is connected.</p>
             </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value)}
+                placeholder="Coupon code"
+                className="flex-1 px-3.5 py-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs"
+              />
+              <button
+                type="button"
+                onClick={async () => {
+                  const message = await applyCouponCode(couponInput)
+                  setError(message.includes('applied') ? '' : message)
+                }}
+                className="px-4 py-3 bg-neutral-900 text-white text-xs font-bold uppercase rounded-xl"
+              >
+                Apply
+              </button>
+            </div>
+            {coupon ? (
+              <button type="button" onClick={removeCoupon} className="text-xs underline text-neutral-500">
+                Remove coupon {coupon.code}
+              </button>
+            ) : null}
           </div>
 
           <button
             type="submit"
-            className="w-full py-4 bg-neutral-900 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xl hover:bg-neutral-800 transition min-h-[48px]"
+            disabled={submitting}
+            className="w-full py-4 bg-neutral-900 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xl hover:bg-neutral-800 transition min-h-[48px] disabled:opacity-60"
           >
-            Place Order — ${grandTotal.toFixed(2)}
+            {submitting ? 'Placing order…' : `Place Order — $${grandTotal.toFixed(2)}`}
           </button>
+          {error ? <p className="text-xs text-red-600">{error}</p> : null}
         </form>
 
         {/* Right: Order Summary */}
@@ -217,6 +292,12 @@ export default function CheckoutPage() {
               <span>Tax</span>
               <span>${estimatedTax.toFixed(2)}</span>
             </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-emerald-700">
+                <span>Discount {coupon?.code ? `(${coupon.code})` : ''}</span>
+                <span>-${discount.toFixed(2)}</span>
+              </div>
+            )}
             <div className="pt-3 border-t border-neutral-200 flex justify-between text-base font-extrabold text-neutral-900">
               <span>Total</span>
               <span>${grandTotal.toFixed(2)}</span>

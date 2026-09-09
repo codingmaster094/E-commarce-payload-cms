@@ -1,6 +1,6 @@
 import type { GlobalConfig } from 'payload'
 import { anyone } from '@/access/anyone'
-import { authenticated } from '@/access/authenticated'
+import { isAdmin } from '@/access/isAdmin'
 import { SEO } from '@/app/components/SEO/config'
 
 export const SiteSettings: GlobalConfig = {
@@ -11,7 +11,7 @@ export const SiteSettings: GlobalConfig = {
   },
   access: {
     read: anyone,
-    update: authenticated,
+    update: isAdmin,
   },
   fields: [
     {
@@ -61,6 +61,9 @@ export const SiteSettings: GlobalConfig = {
               type: 'text',
               defaultValue: 'USD',
             },
+            { name: 'logo', type: 'upload', relationTo: 'media' },
+            { name: 'favicon', type: 'upload', relationTo: 'media' },
+            { name: 'timezone', type: 'text', defaultValue: 'America/New_York' },
           ],
         },
         {

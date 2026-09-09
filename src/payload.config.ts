@@ -15,6 +15,9 @@ import { ProductCollections } from './collections/Collections'
 import { Reviews } from './collections/Reviews'
 import { Customers } from './collections/Customers'
 import { Orders } from './collections/Orders'
+import { Brands } from './collections/Brands'
+import { ProductAttributes } from './collections/ProductAttributes'
+import { Coupons } from './collections/Coupons'
 import { Header } from './globals/Header/config'
 import { Footer } from './globals/Footer/config'
 import { menus } from './globals/menus/config'
@@ -76,7 +79,20 @@ export default buildConfig({
   },
   cors: allowedOrigins,
   csrf: allowedOrigins,
-  collections: [Users, Media, Pages, Products, Categories, ProductCollections, Reviews, Customers, Orders],
+  collections: [
+    Users,
+    Media,
+    Pages,
+    Products,
+    Categories,
+    ProductCollections,
+    Brands,
+    ProductAttributes,
+    Reviews,
+    Customers,
+    Orders,
+    Coupons,
+  ],
   globals: [
     Header,
     Footer,

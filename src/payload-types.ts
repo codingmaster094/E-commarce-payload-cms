@@ -74,9 +74,12 @@ export interface Config {
     products: Product;
     categories: Category;
     collections: Collection;
+    brands: Brand;
+    'product-attributes': ProductAttribute;
     reviews: Review;
     customers: Customer;
     orders: Order;
+    coupons: Coupon;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -89,9 +92,12 @@ export interface Config {
     products: ProductsSelect<false> | ProductsSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     collections: CollectionsSelect<false> | CollectionsSelect<true>;
+    brands: BrandsSelect<false> | BrandsSelect<true>;
+    'product-attributes': ProductAttributesSelect<false> | ProductAttributesSelect<true>;
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
     customers: CustomersSelect<false> | CustomersSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
+    coupons: CouponsSelect<false> | CouponsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -176,6 +182,7 @@ export interface CustomerAuthOperations {
  */
 export interface User {
   id: string;
+  name?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -202,6 +209,7 @@ export interface Media {
   id: string;
   alt?: string | null;
   caption?: string | null;
+  usage?: ('product' | 'category' | 'brand' | 'banner' | 'blog' | 'avatar' | 'icon' | 'other') | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -239,6 +247,18 @@ export interface Page {
         | AccordionBlock
         | SpacerBlock
         | HtmlBlock
+        | ProductGridBlock
+        | ProductCarouselBlock
+        | CategoryGridBlock
+        | BrandGridBlock
+        | PromoBannerBlock
+        | NewsletterBlock
+        | FeaturesBlock
+        | TestimonialsCmsBlock
+        | GalleryBlock
+        | VideoBlock
+        | LogoCloudBlock
+        | ColumnsBlock
       )[]
     | null;
   seo?: {
@@ -770,6 +790,33 @@ export interface HtmlBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProductGridBlock".
+ */
+export interface ProductGridBlock {
+  heading?: string | null;
+  eyebrow?: string | null;
+  source?: ('featured' | 'bestSeller' | 'newArrival' | 'selected') | null;
+  products?: (string | Product)[] | null;
+  limit?: number | null;
+  /**
+   * Spacing, visibility and background for this block.
+   */
+  settings?: {
+    visible?: boolean | null;
+    /**
+     * Optional HTML id, e.g. kontakt
+     */
+    anchor?: string | null;
+    background?: ('default' | 'white' | 'muted' | 'dark') | null;
+    padding?: ('none' | 'sm' | 'md' | 'lg') | null;
+    align?: ('left' | 'center') | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'productGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "products".
  */
 export interface Product {
@@ -853,6 +900,68 @@ export interface Product {
   featured?: boolean | null;
   bestSeller?: boolean | null;
   newArrival?: boolean | null;
+  brand?: (string | null) | Brand;
+  salePrice?: number | null;
+  currency?: string | null;
+  lowStockThreshold?: number | null;
+  tags?:
+    | {
+        tag: string;
+        id?: string | null;
+      }[]
+    | null;
+  status?: ('published' | 'draft' | 'archived') | null;
+  visibility?: ('visible' | 'hidden') | null;
+  variants?:
+    | {
+        title: string;
+        sku?: string | null;
+        price?: number | null;
+        stock?: number | null;
+        status?: ('active' | 'inactive') | null;
+        images?:
+          | {
+              image?: (string | null) | Media;
+              id?: string | null;
+            }[]
+          | null;
+        attributes?:
+          | {
+              name: string;
+              value: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  attributeValues?:
+    | {
+        attribute: string | ProductAttribute;
+        value: string;
+        id?: string | null;
+      }[]
+    | null;
+  relatedProducts?: (string | Product)[] | null;
+  crossSellProducts?: (string | Product)[] | null;
+  upsellProducts?: (string | Product)[] | null;
+  seo?: {
+    meta?: {
+      title?: string | null;
+      description?: string | null;
+      /**
+       * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+       */
+      image?: (string | null) | Media;
+      /**
+       * Enter your JSON-LD schema markup here. This is typically used for rich snippets.
+       */
+      schemaMarkup?: string | null;
+      indexing?: ('index' | 'noindex') | null;
+      following?: ('follow' | 'nofollow') | null;
+      canonicalUrl?: string | null;
+    };
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -869,6 +978,25 @@ export interface Category {
   imageUrl?: string | null;
   parentCategory?: (string | null) | Category;
   featured?: boolean | null;
+  sortOrder?: number | null;
+  status?: ('active' | 'draft') | null;
+  seo?: {
+    meta?: {
+      title?: string | null;
+      description?: string | null;
+      /**
+       * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+       */
+      image?: (string | null) | Media;
+      /**
+       * Enter your JSON-LD schema markup here. This is typically used for rich snippets.
+       */
+      schemaMarkup?: string | null;
+      indexing?: ('index' | 'noindex') | null;
+      following?: ('follow' | 'nofollow') | null;
+      canonicalUrl?: string | null;
+    };
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -891,15 +1019,379 @@ export interface Collection {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brands".
+ */
+export interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  logo?: (string | null) | Media;
+  logoUrl?: string | null;
+  description?: string | null;
+  website?: string | null;
+  featured?: boolean | null;
+  status?: ('active' | 'draft') | null;
+  seo?: {
+    meta?: {
+      title?: string | null;
+      description?: string | null;
+      /**
+       * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+       */
+      image?: (string | null) | Media;
+      /**
+       * Enter your JSON-LD schema markup here. This is typically used for rich snippets.
+       */
+      schemaMarkup?: string | null;
+      indexing?: ('index' | 'noindex') | null;
+      following?: ('follow' | 'nofollow') | null;
+      canonicalUrl?: string | null;
+    };
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-attributes".
+ */
+export interface ProductAttribute {
+  id: string;
+  name: string;
+  slug: string;
+  type?: ('select' | 'color' | 'text' | 'number') | null;
+  values?:
+    | {
+        label: string;
+        value: string;
+        hex?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  filterable?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProductCarouselBlock".
+ */
+export interface ProductCarouselBlock {
+  heading?: string | null;
+  source?: ('featured' | 'bestSeller' | 'newArrival') | null;
+  /**
+   * Spacing, visibility and background for this block.
+   */
+  settings?: {
+    visible?: boolean | null;
+    /**
+     * Optional HTML id, e.g. kontakt
+     */
+    anchor?: string | null;
+    background?: ('default' | 'white' | 'muted' | 'dark') | null;
+    padding?: ('none' | 'sm' | 'md' | 'lg') | null;
+    align?: ('left' | 'center') | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'productCarousel';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CategoryGridBlock".
+ */
+export interface CategoryGridBlock {
+  heading?: string | null;
+  eyebrow?: string | null;
+  featuredOnly?: boolean | null;
+  /**
+   * Spacing, visibility and background for this block.
+   */
+  settings?: {
+    visible?: boolean | null;
+    /**
+     * Optional HTML id, e.g. kontakt
+     */
+    anchor?: string | null;
+    background?: ('default' | 'white' | 'muted' | 'dark') | null;
+    padding?: ('none' | 'sm' | 'md' | 'lg') | null;
+    align?: ('left' | 'center') | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'categoryGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BrandGridBlock".
+ */
+export interface BrandGridBlock {
+  heading?: string | null;
+  brands?: (string | Brand)[] | null;
+  /**
+   * Spacing, visibility and background for this block.
+   */
+  settings?: {
+    visible?: boolean | null;
+    /**
+     * Optional HTML id, e.g. kontakt
+     */
+    anchor?: string | null;
+    background?: ('default' | 'white' | 'muted' | 'dark') | null;
+    padding?: ('none' | 'sm' | 'md' | 'lg') | null;
+    align?: ('left' | 'center') | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'brandGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PromoBannerBlock".
+ */
+export interface PromoBannerBlock {
+  eyebrow?: string | null;
+  heading: string;
+  text?: string | null;
+  ctaLabel?: string | null;
+  ctaUrl?: string | null;
+  image?: (string | null) | Media;
+  /**
+   * Spacing, visibility and background for this block.
+   */
+  settings?: {
+    visible?: boolean | null;
+    /**
+     * Optional HTML id, e.g. kontakt
+     */
+    anchor?: string | null;
+    background?: ('default' | 'white' | 'muted' | 'dark') | null;
+    padding?: ('none' | 'sm' | 'md' | 'lg') | null;
+    align?: ('left' | 'center') | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'promoBanner';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "NewsletterBlock".
+ */
+export interface NewsletterBlock {
+  heading?: string | null;
+  text?: string | null;
+  /**
+   * Spacing, visibility and background for this block.
+   */
+  settings?: {
+    visible?: boolean | null;
+    /**
+     * Optional HTML id, e.g. kontakt
+     */
+    anchor?: string | null;
+    background?: ('default' | 'white' | 'muted' | 'dark') | null;
+    padding?: ('none' | 'sm' | 'md' | 'lg') | null;
+    align?: ('left' | 'center') | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'newsletter';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FeaturesBlock".
+ */
+export interface FeaturesBlock {
+  heading?: string | null;
+  items?:
+    | {
+        title: string;
+        description?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Spacing, visibility and background for this block.
+   */
+  settings?: {
+    visible?: boolean | null;
+    /**
+     * Optional HTML id, e.g. kontakt
+     */
+    anchor?: string | null;
+    background?: ('default' | 'white' | 'muted' | 'dark') | null;
+    padding?: ('none' | 'sm' | 'md' | 'lg') | null;
+    align?: ('left' | 'center') | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'features';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TestimonialsCmsBlock".
+ */
+export interface TestimonialsCmsBlock {
+  heading?: string | null;
+  items?:
+    | {
+        quote: string;
+        author?: string | null;
+        role?: string | null;
+        rating?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Spacing, visibility and background for this block.
+   */
+  settings?: {
+    visible?: boolean | null;
+    /**
+     * Optional HTML id, e.g. kontakt
+     */
+    anchor?: string | null;
+    background?: ('default' | 'white' | 'muted' | 'dark') | null;
+    padding?: ('none' | 'sm' | 'md' | 'lg') | null;
+    align?: ('left' | 'center') | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'testimonials';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GalleryBlock".
+ */
+export interface GalleryBlock {
+  heading?: string | null;
+  images?:
+    | {
+        image: string | Media;
+        alt?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Spacing, visibility and background for this block.
+   */
+  settings?: {
+    visible?: boolean | null;
+    /**
+     * Optional HTML id, e.g. kontakt
+     */
+    anchor?: string | null;
+    background?: ('default' | 'white' | 'muted' | 'dark') | null;
+    padding?: ('none' | 'sm' | 'md' | 'lg') | null;
+    align?: ('left' | 'center') | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'gallery';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "VideoBlock".
+ */
+export interface VideoBlock {
+  heading?: string | null;
+  url: string;
+  caption?: string | null;
+  /**
+   * Spacing, visibility and background for this block.
+   */
+  settings?: {
+    visible?: boolean | null;
+    /**
+     * Optional HTML id, e.g. kontakt
+     */
+    anchor?: string | null;
+    background?: ('default' | 'white' | 'muted' | 'dark') | null;
+    padding?: ('none' | 'sm' | 'md' | 'lg') | null;
+    align?: ('left' | 'center') | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'video';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoCloudBlock".
+ */
+export interface LogoCloudBlock {
+  heading?: string | null;
+  logos?:
+    | {
+        image: string | Media;
+        alt?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Spacing, visibility and background for this block.
+   */
+  settings?: {
+    visible?: boolean | null;
+    /**
+     * Optional HTML id, e.g. kontakt
+     */
+    anchor?: string | null;
+    background?: ('default' | 'white' | 'muted' | 'dark') | null;
+    padding?: ('none' | 'sm' | 'md' | 'lg') | null;
+    align?: ('left' | 'center') | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'logoCloud';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColumnsBlock".
+ */
+export interface ColumnsBlock {
+  columns?:
+    | {
+        heading?: string | null;
+        text?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Spacing, visibility and background for this block.
+   */
+  settings?: {
+    visible?: boolean | null;
+    /**
+     * Optional HTML id, e.g. kontakt
+     */
+    anchor?: string | null;
+    background?: ('default' | 'white' | 'muted' | 'dark') | null;
+    padding?: ('none' | 'sm' | 'md' | 'lg') | null;
+    align?: ('left' | 'center') | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'columns';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "reviews".
  */
 export interface Review {
   id: string;
   product: string | Product;
+  customer?: (string | null) | Customer;
   customerName: string;
   rating: number;
   title: string;
+  comment?: string | null;
   review: string;
+  images?:
+    | {
+        image?: (string | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
   verifiedPurchase?: boolean | null;
   status?: ('approved' | 'pending' | 'rejected') | null;
   updatedAt: string;
@@ -912,7 +1404,26 @@ export interface Review {
 export interface Customer {
   id: string;
   name: string;
+  firstName?: string | null;
+  lastName?: string | null;
   phone?: string | null;
+  avatar?: (string | null) | Media;
+  addresses?:
+    | {
+        label?: string | null;
+        firstName?: string | null;
+        lastName?: string | null;
+        phone?: string | null;
+        street: string;
+        city: string;
+        postalCode?: string | null;
+        country?: string | null;
+        isDefault?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  wishlist?: (string | Product)[] | null;
+  status?: ('active' | 'disabled') | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -938,22 +1449,75 @@ export interface Customer {
 export interface Order {
   id: string;
   orderNumber: string;
+  customer?: (string | null) | Customer;
+  customerEmail?: string | null;
+  customerName?: string | null;
   items?:
     | {
         productName: string;
         productId: string;
+        sku?: string | null;
         quantity: number;
         unitPrice: number;
         color?: string | null;
+        variantTitle?: string | null;
         id?: string | null;
       }[]
     | null;
   subtotal: number;
+  discount?: number | null;
+  couponCode?: string | null;
   shipping?: number | null;
   tax?: number | null;
   total: number;
-  paymentStatus?: ('pending' | 'paid' | 'failed') | null;
-  orderStatus?: ('processing' | 'shipped' | 'delivered' | 'cancelled') | null;
+  currency?: string | null;
+  paymentStatus?: ('pending' | 'paid' | 'failed' | 'refunded') | null;
+  orderStatus?: ('pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded') | null;
+  shippingAddress?: {
+    firstName?: string | null;
+    lastName?: string | null;
+    phone?: string | null;
+    street?: string | null;
+    city?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+  };
+  billingAddress?: {
+    sameAsShipping?: boolean | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    street?: string | null;
+    city?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+  };
+  shippingMethod?: string | null;
+  paymentMethod?: string | null;
+  transactionId?: string | null;
+  notes?: string | null;
+  trackingNumber?: string | null;
+  trackingUrl?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "coupons".
+ */
+export interface Coupon {
+  id: string;
+  code: string;
+  type: 'percentage' | 'fixed';
+  value: number;
+  minimumOrderValue?: number | null;
+  maximumDiscount?: number | null;
+  usageLimit?: number | null;
+  usageCount?: number | null;
+  startDate?: string | null;
+  expiryDate?: string | null;
+  applicableProducts?: (string | Product)[] | null;
+  applicableCategories?: (string | Category)[] | null;
+  status?: ('active' | 'inactive') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -989,6 +1553,14 @@ export interface PayloadLockedDocument {
         value: string | Collection;
       } | null)
     | ({
+        relationTo: 'brands';
+        value: string | Brand;
+      } | null)
+    | ({
+        relationTo: 'product-attributes';
+        value: string | ProductAttribute;
+      } | null)
+    | ({
         relationTo: 'reviews';
         value: string | Review;
       } | null)
@@ -999,6 +1571,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'orders';
         value: string | Order;
+      } | null)
+    | ({
+        relationTo: 'coupons';
+        value: string | Coupon;
       } | null);
   globalSlug?: string | null;
   user:
@@ -1057,6 +1633,7 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  name?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1081,6 +1658,7 @@ export interface UsersSelect<T extends boolean = true> {
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
   caption?: T;
+  usage?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -1116,6 +1694,18 @@ export interface PagesSelect<T extends boolean = true> {
         accordion?: T | AccordionBlockSelect<T>;
         spacer?: T | SpacerBlockSelect<T>;
         html?: T | HtmlBlockSelect<T>;
+        productGrid?: T | ProductGridBlockSelect<T>;
+        productCarousel?: T | ProductCarouselBlockSelect<T>;
+        categoryGrid?: T | CategoryGridBlockSelect<T>;
+        brandGrid?: T | BrandGridBlockSelect<T>;
+        promoBanner?: T | PromoBannerBlockSelect<T>;
+        newsletter?: T | NewsletterBlockSelect<T>;
+        features?: T | FeaturesBlockSelect<T>;
+        testimonials?: T | TestimonialsCmsBlockSelect<T>;
+        gallery?: T | GalleryBlockSelect<T>;
+        video?: T | VideoBlockSelect<T>;
+        logoCloud?: T | LogoCloudBlockSelect<T>;
+        columns?: T | ColumnsBlockSelect<T>;
       };
   seo?:
     | T
@@ -1501,6 +2091,274 @@ export interface HtmlBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProductGridBlock_select".
+ */
+export interface ProductGridBlockSelect<T extends boolean = true> {
+  heading?: T;
+  eyebrow?: T;
+  source?: T;
+  products?: T;
+  limit?: T;
+  settings?:
+    | T
+    | {
+        visible?: T;
+        anchor?: T;
+        background?: T;
+        padding?: T;
+        align?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ProductCarouselBlock_select".
+ */
+export interface ProductCarouselBlockSelect<T extends boolean = true> {
+  heading?: T;
+  source?: T;
+  settings?:
+    | T
+    | {
+        visible?: T;
+        anchor?: T;
+        background?: T;
+        padding?: T;
+        align?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CategoryGridBlock_select".
+ */
+export interface CategoryGridBlockSelect<T extends boolean = true> {
+  heading?: T;
+  eyebrow?: T;
+  featuredOnly?: T;
+  settings?:
+    | T
+    | {
+        visible?: T;
+        anchor?: T;
+        background?: T;
+        padding?: T;
+        align?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "BrandGridBlock_select".
+ */
+export interface BrandGridBlockSelect<T extends boolean = true> {
+  heading?: T;
+  brands?: T;
+  settings?:
+    | T
+    | {
+        visible?: T;
+        anchor?: T;
+        background?: T;
+        padding?: T;
+        align?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PromoBannerBlock_select".
+ */
+export interface PromoBannerBlockSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  text?: T;
+  ctaLabel?: T;
+  ctaUrl?: T;
+  image?: T;
+  settings?:
+    | T
+    | {
+        visible?: T;
+        anchor?: T;
+        background?: T;
+        padding?: T;
+        align?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "NewsletterBlock_select".
+ */
+export interface NewsletterBlockSelect<T extends boolean = true> {
+  heading?: T;
+  text?: T;
+  settings?:
+    | T
+    | {
+        visible?: T;
+        anchor?: T;
+        background?: T;
+        padding?: T;
+        align?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "FeaturesBlock_select".
+ */
+export interface FeaturesBlockSelect<T extends boolean = true> {
+  heading?: T;
+  items?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  settings?:
+    | T
+    | {
+        visible?: T;
+        anchor?: T;
+        background?: T;
+        padding?: T;
+        align?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TestimonialsCmsBlock_select".
+ */
+export interface TestimonialsCmsBlockSelect<T extends boolean = true> {
+  heading?: T;
+  items?:
+    | T
+    | {
+        quote?: T;
+        author?: T;
+        role?: T;
+        rating?: T;
+        id?: T;
+      };
+  settings?:
+    | T
+    | {
+        visible?: T;
+        anchor?: T;
+        background?: T;
+        padding?: T;
+        align?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "GalleryBlock_select".
+ */
+export interface GalleryBlockSelect<T extends boolean = true> {
+  heading?: T;
+  images?:
+    | T
+    | {
+        image?: T;
+        alt?: T;
+        id?: T;
+      };
+  settings?:
+    | T
+    | {
+        visible?: T;
+        anchor?: T;
+        background?: T;
+        padding?: T;
+        align?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "VideoBlock_select".
+ */
+export interface VideoBlockSelect<T extends boolean = true> {
+  heading?: T;
+  url?: T;
+  caption?: T;
+  settings?:
+    | T
+    | {
+        visible?: T;
+        anchor?: T;
+        background?: T;
+        padding?: T;
+        align?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LogoCloudBlock_select".
+ */
+export interface LogoCloudBlockSelect<T extends boolean = true> {
+  heading?: T;
+  logos?:
+    | T
+    | {
+        image?: T;
+        alt?: T;
+        id?: T;
+      };
+  settings?:
+    | T
+    | {
+        visible?: T;
+        anchor?: T;
+        background?: T;
+        padding?: T;
+        align?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ColumnsBlock_select".
+ */
+export interface ColumnsBlockSelect<T extends boolean = true> {
+  columns?:
+    | T
+    | {
+        heading?: T;
+        text?: T;
+        id?: T;
+      };
+  settings?:
+    | T
+    | {
+        visible?: T;
+        anchor?: T;
+        background?: T;
+        padding?: T;
+        align?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "products_select".
  */
 export interface ProductsSelect<T extends boolean = true> {
@@ -1571,6 +2429,66 @@ export interface ProductsSelect<T extends boolean = true> {
   featured?: T;
   bestSeller?: T;
   newArrival?: T;
+  brand?: T;
+  salePrice?: T;
+  currency?: T;
+  lowStockThreshold?: T;
+  tags?:
+    | T
+    | {
+        tag?: T;
+        id?: T;
+      };
+  status?: T;
+  visibility?: T;
+  variants?:
+    | T
+    | {
+        title?: T;
+        sku?: T;
+        price?: T;
+        stock?: T;
+        status?: T;
+        images?:
+          | T
+          | {
+              image?: T;
+              id?: T;
+            };
+        attributes?:
+          | T
+          | {
+              name?: T;
+              value?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  attributeValues?:
+    | T
+    | {
+        attribute?: T;
+        value?: T;
+        id?: T;
+      };
+  relatedProducts?: T;
+  crossSellProducts?: T;
+  upsellProducts?: T;
+  seo?:
+    | T
+    | {
+        meta?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+              image?: T;
+              schemaMarkup?: T;
+              indexing?: T;
+              following?: T;
+              canonicalUrl?: T;
+            };
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1586,6 +2504,23 @@ export interface CategoriesSelect<T extends boolean = true> {
   imageUrl?: T;
   parentCategory?: T;
   featured?: T;
+  sortOrder?: T;
+  status?: T;
+  seo?:
+    | T
+    | {
+        meta?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+              image?: T;
+              schemaMarkup?: T;
+              indexing?: T;
+              following?: T;
+              canonicalUrl?: T;
+            };
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1607,14 +2542,73 @@ export interface CollectionsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "brands_select".
+ */
+export interface BrandsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  logo?: T;
+  logoUrl?: T;
+  description?: T;
+  website?: T;
+  featured?: T;
+  status?: T;
+  seo?:
+    | T
+    | {
+        meta?:
+          | T
+          | {
+              title?: T;
+              description?: T;
+              image?: T;
+              schemaMarkup?: T;
+              indexing?: T;
+              following?: T;
+              canonicalUrl?: T;
+            };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "product-attributes_select".
+ */
+export interface ProductAttributesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  type?: T;
+  values?:
+    | T
+    | {
+        label?: T;
+        value?: T;
+        hex?: T;
+        id?: T;
+      };
+  filterable?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "reviews_select".
  */
 export interface ReviewsSelect<T extends boolean = true> {
   product?: T;
+  customer?: T;
   customerName?: T;
   rating?: T;
   title?: T;
+  comment?: T;
   review?: T;
+  images?:
+    | T
+    | {
+        image?: T;
+        id?: T;
+      };
   verifiedPurchase?: T;
   status?: T;
   updatedAt?: T;
@@ -1626,7 +2620,26 @@ export interface ReviewsSelect<T extends boolean = true> {
  */
 export interface CustomersSelect<T extends boolean = true> {
   name?: T;
+  firstName?: T;
+  lastName?: T;
   phone?: T;
+  avatar?: T;
+  addresses?:
+    | T
+    | {
+        label?: T;
+        firstName?: T;
+        lastName?: T;
+        phone?: T;
+        street?: T;
+        city?: T;
+        postalCode?: T;
+        country?: T;
+        isDefault?: T;
+        id?: T;
+      };
+  wishlist?: T;
+  status?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1650,22 +2663,78 @@ export interface CustomersSelect<T extends boolean = true> {
  */
 export interface OrdersSelect<T extends boolean = true> {
   orderNumber?: T;
+  customer?: T;
+  customerEmail?: T;
+  customerName?: T;
   items?:
     | T
     | {
         productName?: T;
         productId?: T;
+        sku?: T;
         quantity?: T;
         unitPrice?: T;
         color?: T;
+        variantTitle?: T;
         id?: T;
       };
   subtotal?: T;
+  discount?: T;
+  couponCode?: T;
   shipping?: T;
   tax?: T;
   total?: T;
+  currency?: T;
   paymentStatus?: T;
   orderStatus?: T;
+  shippingAddress?:
+    | T
+    | {
+        firstName?: T;
+        lastName?: T;
+        phone?: T;
+        street?: T;
+        city?: T;
+        postalCode?: T;
+        country?: T;
+      };
+  billingAddress?:
+    | T
+    | {
+        sameAsShipping?: T;
+        firstName?: T;
+        lastName?: T;
+        street?: T;
+        city?: T;
+        postalCode?: T;
+        country?: T;
+      };
+  shippingMethod?: T;
+  paymentMethod?: T;
+  transactionId?: T;
+  notes?: T;
+  trackingNumber?: T;
+  trackingUrl?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "coupons_select".
+ */
+export interface CouponsSelect<T extends boolean = true> {
+  code?: T;
+  type?: T;
+  value?: T;
+  minimumOrderValue?: T;
+  maximumDiscount?: T;
+  usageLimit?: T;
+  usageCount?: T;
+  startDate?: T;
+  expiryDate?: T;
+  applicableProducts?: T;
+  applicableCategories?: T;
+  status?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1718,6 +2787,34 @@ export interface Header {
   };
   type?: ('none' | 'highImpact' | 'mediumImpact' | 'lowImpact') | null;
   media?: (string | null) | Media;
+  showAnnouncement?: boolean | null;
+  searchEnabled?: boolean | null;
+  accountEnabled?: boolean | null;
+  wishlistEnabled?: boolean | null;
+  cartEnabled?: boolean | null;
+  mobileMenuEnabled?: boolean | null;
+  cta?: {
+    label?: string | null;
+    url?: string | null;
+    openInNewTab?: boolean | null;
+  };
+  navigation?:
+    | {
+        label: string;
+        link: string;
+        type?: ('link' | 'dropdown') | null;
+        openInNewTab?: boolean | null;
+        children?:
+          | {
+              label: string;
+              link: string;
+              openInNewTab?: boolean | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1774,6 +2871,18 @@ export interface Footer {
       }[]
     | null;
   copyright?: string | null;
+  newsletter?: {
+    enabled?: boolean | null;
+    heading?: string | null;
+    text?: string | null;
+  };
+  paymentIcons?:
+    | {
+        label?: string | null;
+        icon?: (string | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1935,6 +3044,9 @@ export interface SiteSetting {
   logoSubtext?: string | null;
   currency?: string | null;
   currencyCode?: string | null;
+  logo?: (string | null) | Media;
+  favicon?: (string | null) | Media;
+  timezone?: string | null;
   email?: string | null;
   phone?: string | null;
   address?: string | null;
@@ -2125,6 +3237,36 @@ export interface HeaderSelect<T extends boolean = true> {
       };
   type?: T;
   media?: T;
+  showAnnouncement?: T;
+  searchEnabled?: T;
+  accountEnabled?: T;
+  wishlistEnabled?: T;
+  cartEnabled?: T;
+  mobileMenuEnabled?: T;
+  cta?:
+    | T
+    | {
+        label?: T;
+        url?: T;
+        openInNewTab?: T;
+      };
+  navigation?:
+    | T
+    | {
+        label?: T;
+        link?: T;
+        type?: T;
+        openInNewTab?: T;
+        children?:
+          | T
+          | {
+              label?: T;
+              link?: T;
+              openInNewTab?: T;
+              id?: T;
+            };
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -2183,6 +3325,20 @@ export interface FooterSelect<T extends boolean = true> {
         id?: T;
       };
   copyright?: T;
+  newsletter?:
+    | T
+    | {
+        enabled?: T;
+        heading?: T;
+        text?: T;
+      };
+  paymentIcons?:
+    | T
+    | {
+        label?: T;
+        icon?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -2320,6 +3476,9 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   logoSubtext?: T;
   currency?: T;
   currencyCode?: T;
+  logo?: T;
+  favicon?: T;
+  timezone?: T;
   email?: T;
   phone?: T;
   address?: T;

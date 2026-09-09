@@ -133,6 +133,89 @@ const registry = {
   ),
   html: (block) =>
     block.html ? <div className="container" dangerouslySetInnerHTML={{ __html: block.html }} /> : null,
+  productGrid: (block) => (
+    <div className="container space-y-4">
+      {block.heading ? <h2 className="text-2xl font-extrabold font-outfit">{block.heading}</h2> : null}
+      <p className="text-sm text-neutral-600">Browse the <a className="underline" href="/chairs">catalog</a> for featured seating.</p>
+    </div>
+  ),
+  productCarousel: (block) => (
+    <div className="container"><h2 className="text-2xl font-extrabold font-outfit">{block.heading || 'Featured chairs'}</h2></div>
+  ),
+  categoryGrid: (block) => (
+    <div className="container space-y-2">
+      {block.heading ? <h2 className="text-2xl font-extrabold font-outfit">{block.heading}</h2> : null}
+      <a className="text-sm underline" href="/categories">View categories</a>
+    </div>
+  ),
+  brandGrid: (block) => (
+    <div className="container"><a className="underline" href="/brands">{block.heading || 'Brands'}</a></div>
+  ),
+  promoBanner: (block) => (
+    <div className="container">
+      <div className="rounded-3xl bg-neutral-900 text-white p-8 space-y-3">
+        {block.eyebrow ? <p className="text-xs uppercase tracking-wider text-amber-400">{block.eyebrow}</p> : null}
+        <h2 className="text-2xl font-extrabold font-outfit">{block.heading}</h2>
+        {block.text ? <p className="text-sm text-neutral-200">{block.text}</p> : null}
+        {block.ctaUrl ? <a href={block.ctaUrl} className="inline-block mt-2 text-xs font-bold uppercase underline">{block.ctaLabel || 'Shop now'}</a> : null}
+      </div>
+    </div>
+  ),
+  newsletter: (block) => (
+    <div className="container max-w-xl space-y-3">
+      <h2 className="text-2xl font-extrabold font-outfit">{block.heading || 'Newsletter'}</h2>
+      {block.text ? <p className="text-sm text-neutral-600">{block.text}</p> : null}
+    </div>
+  ),
+  features: (block) => (
+    <div className="container grid sm:grid-cols-3 gap-6">
+      {(block.items || []).map((item, index) => (
+        <div key={index} className="p-5 border border-neutral-200 rounded-2xl">
+          <h3 className="font-bold font-outfit">{item.title}</h3>
+          <p className="text-xs text-neutral-600 mt-2">{item.description}</p>
+        </div>
+      ))}
+    </div>
+  ),
+  testimonials: (block) => (
+    <div className="container grid md:grid-cols-3 gap-6">
+      {(block.items || []).map((item, index) => (
+        <blockquote key={index} className="p-5 border border-neutral-200 rounded-2xl text-sm">
+          <p>{item.quote}</p>
+          <footer className="mt-3 text-xs font-bold">{item.author}</footer>
+        </blockquote>
+      ))}
+    </div>
+  ),
+  gallery: (block) => (
+    <div className="container grid grid-cols-2 md:grid-cols-4 gap-3">
+      {(block.images || []).map((item, index) =>
+        item.image?.url ? <img key={index} src={item.image.url} alt={item.alt || ''} className="w-full h-40 object-cover rounded-xl" /> : null
+      )}
+    </div>
+  ),
+  video: (block) => (
+    <div className="container">
+      {block.url ? <iframe title={block.heading || 'Video'} src={block.url} className="w-full aspect-video rounded-2xl" /> : null}
+    </div>
+  ),
+  logoCloud: (block) => (
+    <div className="container flex flex-wrap gap-6 items-center">
+      {(block.logos || []).map((item, index) =>
+        item.image?.url ? <img key={index} src={item.image.url} alt={item.alt || ''} className="h-10 object-contain" /> : null
+      )}
+    </div>
+  ),
+  columns: (block) => (
+    <div className="container grid md:grid-cols-2 gap-6">
+      {(block.columns || []).map((item, index) => (
+        <div key={index}>
+          <h3 className="font-bold font-outfit">{item.heading}</h3>
+          <p className="text-sm text-neutral-600 mt-2">{item.text}</p>
+        </div>
+      ))}
+    </div>
+  ),
 }
 
 export default function RenderBlocks({ blocks }) {

@@ -1,18 +1,19 @@
 import type { CollectionConfig } from 'payload'
 import { anyone } from '@/access/anyone'
-import { authenticated } from '@/access/authenticated'
+import { isAdmin } from '@/access/isAdmin'
+import { seoFields } from '@/fields/seoFields'
 
 export const Categories: CollectionConfig = {
   slug: 'categories',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'slug', 'featured'],
+    defaultColumns: ['name', 'slug', 'parentCategory', 'featured', 'status'],
   },
   access: {
     read: anyone,
-    create: authenticated,
-    update: authenticated,
-    delete: authenticated,
+    create: isAdmin,
+    update: isAdmin,
+    delete: isAdmin,
   },
   fields: [
     {
@@ -52,5 +53,20 @@ export const Categories: CollectionConfig = {
       type: 'checkbox',
       defaultValue: true,
     },
+    {
+      name: 'sortOrder',
+      type: 'number',
+      defaultValue: 0,
+    },
+    {
+      name: 'status',
+      type: 'select',
+      defaultValue: 'active',
+      options: [
+        { label: 'Active', value: 'active' },
+        { label: 'Draft', value: 'draft' },
+      ],
+    },
+    seoFields,
   ],
 }

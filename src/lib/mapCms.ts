@@ -179,6 +179,11 @@ export function mapProduct(doc: Record<string, unknown> | null | undefined): Pro
     featured: Boolean(doc.featured),
     bestSeller: Boolean(doc.bestSeller),
     newArrival: Boolean(doc.newArrival),
+    brandSlug: typeof doc.brand === 'object' && doc.brand ? String((doc.brand as { slug?: string }).slug ?? '') : '',
+    brandName: typeof doc.brand === 'object' && doc.brand ? String((doc.brand as { name?: string }).name ?? '') : '',
+    tags: Array.isArray(doc.tags)
+      ? doc.tags.map((entry) => (typeof entry === 'object' && entry && 'tag' in entry ? String((entry as { tag?: string }).tag || '') : '')).filter(Boolean)
+      : [],
   }
 }
 

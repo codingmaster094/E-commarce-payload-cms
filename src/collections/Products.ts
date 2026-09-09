@@ -1,25 +1,26 @@
 import type { CollectionConfig } from 'payload'
 import { anyone } from '@/access/anyone'
-import { authenticated } from '@/access/authenticated'
+import { isAdmin } from '@/access/isAdmin'
+import { seoFields } from '@/fields/seoFields'
 
 export const Products: CollectionConfig = {
   slug: 'products',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'sku', 'category', 'price', 'stock', 'availability'],
+    defaultColumns: ['name', 'sku', 'category', 'price', 'stock', 'status', 'availability'],
   },
   access: {
     read: anyone,
-    create: authenticated,
-    update: authenticated,
-    delete: authenticated,
+    create: isAdmin,
+    update: isAdmin,
+    delete: isAdmin,
   },
   fields: [
     {
       name: 'name',
       type: 'text',
       required: true,
-      label: { en: 'Product Name', de: 'Produktname' },
+      label: { en: 'Title', de: 'Titel' },
     },
     {
       name: 'slug',
@@ -203,5 +204,116 @@ export const Products: CollectionConfig = {
       defaultValue: false,
       label: { en: 'New Arrival', de: 'Neuheit' },
     },
+    {
+      name: 'brand',
+      type: 'relationship',
+      relationTo: 'brands',
+      label: 'Brand',
+    },
+    {
+      name: 'salePrice',
+      type: 'number',
+      label: 'Sale price',
+    },
+    {
+      name: 'currency',
+      type: 'text',
+      defaultValue: 'USD',
+    },
+    {
+      name: 'lowStockThreshold',
+      type: 'number',
+      defaultValue: 5,
+    },
+    {
+      name: 'tags',
+      type: 'array',
+      fields: [{ name: 'tag', type: 'text', required: true }],
+    },
+    {
+      name: 'status',
+      type: 'select',
+      defaultValue: 'published',
+      options: [
+        { label: 'Published', value: 'published' },
+        { label: 'Draft', value: 'draft' },
+        { label: 'Archived', value: 'archived' },
+      ],
+    },
+    {
+      name: 'visibility',
+      type: 'select',
+      defaultValue: 'visible',
+      options: [
+        { label: 'Visible', value: 'visible' },
+        { label: 'Hidden', value: 'hidden' },
+      ],
+    },
+    {
+      name: 'variants',
+      type: 'array',
+      label: 'Variants',
+      fields: [
+        { name: 'title', type: 'text', required: true },
+        { name: 'sku', type: 'text' },
+        { name: 'price', type: 'number' },
+        { name: 'stock', type: 'number' },
+        {
+          name: 'status',
+          type: 'select',
+          defaultValue: 'active',
+          options: [
+            { label: 'Active', value: 'active' },
+            { label: 'Inactive', value: 'inactive' },
+          ],
+        },
+        {
+          name: 'images',
+          type: 'array',
+          fields: [{ name: 'image', type: 'upload', relationTo: 'media' }],
+        },
+        {
+          name: 'attributes',
+          type: 'array',
+          fields: [
+            { name: 'name', type: 'text', required: true },
+            { name: 'value', type: 'text', required: true },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'attributeValues',
+      type: 'array',
+      label: 'Attributes',
+      fields: [
+        {
+          name: 'attribute',
+          type: 'relationship',
+          relationTo: 'product-attributes',
+          required: true,
+        },
+        { name: 'value', type: 'text', required: true },
+      ],
+    },
+    {
+      name: 'relatedProducts',
+      type: 'relationship',
+      relationTo: 'products',
+      hasMany: true,
+    },
+    {
+      name: 'crossSellProducts',
+      type: 'relationship',
+      relationTo: 'products',
+      hasMany: true,
+    },
+    {
+      name: 'upsellProducts',
+      type: 'relationship',
+      relationTo: 'products',
+      hasMany: true,
+    },
+    seoFields,
   ],
 }

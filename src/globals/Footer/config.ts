@@ -263,6 +263,20 @@ export const Footer: GlobalConfig = {
         de: 'Copyright Text',
       },
     },
+    {
+      name: 'newsletter',
+      type: 'group',
+      fields: [
+        { name: 'enabled', type: 'checkbox', defaultValue: false },
+        { name: 'heading', type: 'text' },
+        { name: 'text', type: 'textarea' },
+      ],
+    },
+    {
+      name: 'paymentIcons',
+      type: 'array',
+      fields: [{ name: 'label', type: 'text' }, { name: 'icon', type: 'upload', relationTo: 'media' }],
+    },
   ],
   hooks: {
     afterChange: [revalidateFooter],

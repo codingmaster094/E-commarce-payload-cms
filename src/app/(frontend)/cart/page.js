@@ -5,12 +5,15 @@ import Link from 'next/link'
 import { useShop } from '@/context/ShopContext'
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity, clearCart, cartSubtotal, brand } = useShop()
+  const { cart, removeFromCart, updateQuantity, clearCart, cartSubtotal, brand, coupon, applyCouponCode, removeCoupon } = useShop()
+  const [couponInput, setCouponInput] = React.useState('')
+  const [couponMessage, setCouponMessage] = React.useState('')
 
   const freeShippingThreshold = brand.policies.freeShippingThreshold
   const shippingFee = cartSubtotal >= freeShippingThreshold || cartSubtotal === 0 ? 0 : 25
   const estimatedTax = cartSubtotal * 0.08
-  const grandTotal = cartSubtotal + shippingFee + estimatedTax
+  const discount = coupon?.discount || 0
+  const grandTotal = Math.max(0, cartSubtotal - discount + shippingFee + estimatedTax)
 
   if (cart.length === 0) {
     return (
@@ -112,10 +115,40 @@ export default function CartPage() {
               <span>Estimated Tax (8%)</span>
               <span>${estimatedTax.toFixed(2)}</span>
             </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-emerald-700">
+                <span>Discount</span>
+                <span>-${discount.toFixed(2)}</span>
+              </div>
+            )}
             <div className="pt-3 border-t border-neutral-200 flex justify-between text-base font-extrabold text-neutral-900">
               <span>Total</span>
               <span>${grandTotal.toFixed(2)}</span>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <input
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value)}
+                placeholder="Coupon code"
+                className="flex-1 px-3 py-2.5 bg-white border border-neutral-200 rounded-xl text-xs"
+              />
+              <button
+                type="button"
+                onClick={async () => setCouponMessage(await applyCouponCode(couponInput))}
+                className="px-3 py-2.5 bg-neutral-900 text-white text-xs font-bold uppercase rounded-xl"
+              >
+                Apply
+              </button>
+            </div>
+            {coupon ? (
+              <button type="button" onClick={removeCoupon} className="text-[11px] underline text-neutral-500">
+                Remove {coupon.code}
+              </button>
+            ) : null}
+            {couponMessage ? <p className="text-[11px] text-neutral-500">{couponMessage}</p> : null}
           </div>
 
           <Link

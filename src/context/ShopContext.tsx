@@ -11,12 +11,16 @@ export interface CartItem {
   selectedColor?: string
 }
 
+export interface AppliedCoupon {
+  code: string
+  discount: number
+}
+
 interface ShopContextType {
   products: ProductItem[]
   categories: CategoryItem[]
   collections: CollectionItem[]
   brand: BrandConfig
-  // Cart
   cart: CartItem[]
   addToCart: (product: ProductItem, quantity?: number, selectedColor?: string) => void
   removeFromCart: (productId: string) => void
@@ -26,26 +30,21 @@ interface ShopContextType {
   setIsCartOpen: (open: boolean) => void
   cartSubtotal: number
   cartTotalCount: number
-
-  // Wishlist
+  coupon: AppliedCoupon | null
+  applyCouponCode: (code: string) => Promise<string>
+  removeCoupon: () => void
   wishlist: string[]
   toggleWishlist: (productId: string) => void
   isInWishlist: (productId: string) => boolean
   wishlistCount: number
-
-  // Compare
   compareList: string[]
   toggleCompare: (productId: string) => void
   isInCompare: (productId: string) => boolean
   clearCompare: () => void
   isCompareOpen: boolean
   setIsCompareOpen: (open: boolean) => void
-
-  // Quick View Modal
   quickViewProduct: ProductItem | null
   setQuickViewProduct: (product: ProductItem | null) => void
-
-  // Toast Notification
   toastMessage: string | null
   showToast: (msg: string) => void
 }
@@ -68,12 +67,12 @@ export const ShopProvider: React.FC<{
   const [cart, setCart] = useState<CartItem[]>([])
   const [wishlist, setWishlist] = useState<string[]>([])
   const [compareList, setCompareList] = useState<string[]>([])
+  const [coupon, setCoupon] = useState<AppliedCoupon | null>(null)
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false)
   const [isCompareOpen, setIsCompareOpen] = useState<boolean>(false)
   const [quickViewProduct, setQuickViewProduct] = useState<ProductItem | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
-  // Load state from localStorage on mount
   useEffect(() => {
     try {
       const savedCart = localStorage.getItem('meanova_cart')
@@ -84,12 +83,11 @@ export const ShopProvider: React.FC<{
 
       const savedCompare = localStorage.getItem('meanova_compare')
       if (savedCompare) setCompareList(JSON.parse(savedCompare))
-    } catch (e) {
-      console.error('Failed to load shop state from localStorage', e)
+    } catch {
+      // ignore corrupted local storage
     }
   }, [])
 
-  // Sync to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('meanova_cart', JSON.stringify(cart))
@@ -150,21 +148,47 @@ export const ShopProvider: React.FC<{
 
   const clearCart = () => {
     setCart([])
+    setCoupon(null)
   }
+
+  const cartSubtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
+
+  const applyCouponCode = async (code: string) => {
+    const response = await fetch('/api/commerce/coupon', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code,
+        subtotal: cartSubtotal,
+        productIds: cart.map((item) => item.product.id),
+      }),
+    })
+    const data = await response.json()
+    if (!data.valid) {
+      setCoupon(null)
+      return data.message || 'Invalid coupon.'
+    }
+    setCoupon({ code: data.code, discount: data.discount })
+    showToast(`Coupon ${data.code} applied.`)
+    return 'Coupon applied.'
+  }
+
+  const removeCoupon = () => setCoupon(null)
 
   const toggleWishlist = (productId: string) => {
     setWishlist((prev) => {
       const exists = prev.includes(productId)
       const targetProduct = products.find((p) => p.id === productId)
       const name = targetProduct?.name || 'Product'
-
-      if (exists) {
-        showToast(`Removed "${name}" from your wishlist.`)
-        return prev.filter((id) => id !== productId)
-      } else {
-        showToast(`Added "${name}" to your wishlist.`)
-        return [...prev, productId]
-      }
+      const next = exists ? prev.filter((id) => id !== productId) : [...prev, productId]
+      showToast(exists ? `Removed "${name}" from your wishlist.` : `Added "${name}" to your wishlist.`)
+      fetch('/api/commerce/account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ wishlist: next }),
+      }).catch(() => {})
+      return next
     })
   }
 
@@ -179,25 +203,19 @@ export const ShopProvider: React.FC<{
       if (exists) {
         showToast(`Removed "${name}" from comparison.`)
         return prev.filter((id) => id !== productId)
-      } else {
-        if (prev.length >= 4) {
-          showToast('You can compare up to 4 products at a time.')
-          return prev
-        }
-        showToast(`Added "${name}" to comparison.`)
-        setIsCompareOpen(true)
-        return [...prev, productId]
       }
+      if (prev.length >= 4) {
+        showToast('You can compare up to 4 products at a time.')
+        return prev
+      }
+      showToast(`Added "${name}" to comparison.`)
+      setIsCompareOpen(true)
+      return [...prev, productId]
     })
   }
 
   const isInCompare = (productId: string) => compareList.includes(productId)
-
-  const clearCompare = () => {
-    setCompareList([])
-  }
-
-  const cartSubtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
+  const clearCompare = () => setCompareList([])
   const cartTotalCount = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   return (
@@ -216,6 +234,9 @@ export const ShopProvider: React.FC<{
         setIsCartOpen,
         cartSubtotal,
         cartTotalCount,
+        coupon,
+        applyCouponCode,
+        removeCoupon,
         wishlist,
         toggleWishlist,
         isInWishlist,
@@ -233,8 +254,6 @@ export const ShopProvider: React.FC<{
       }}
     >
       {children}
-
-      {/* Global Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-neutral-900 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-neutral-700 animate-bounce">
           <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
